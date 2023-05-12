@@ -2,6 +2,7 @@
 
 import express from 'express';
 import { config } from 'dotenv';
+import { errorMiddleware } from './middlewares/error.js';
 
 
 config({
@@ -25,4 +26,8 @@ app.use(express.json())
 import userRouter from './routes/user.js';
 
 app.use("/api/v1/user", userRouter)
+
+
+// using error middleware
+app.use(errorMiddleware)
   

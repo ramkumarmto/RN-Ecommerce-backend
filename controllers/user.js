@@ -1,52 +1,48 @@
+import { asyncError } from "../middlewares/error.js";
 import { User } from "../models/user.js";
-export const login = async (req, res, next) => {
-    const { email, password} = req.body;
-    console.log("login body", req.body);
+import ErrorHandler from "../utils/error.js";
 
-    const user = await User.findOne({email});
+//!LOGIN
+export const login = asyncError(async (req, res, next) => {
+  const { email, password} = req.body;
+  const user = await User.findOne({email});
+  // handle error which will do later 
+  // now checking password from register 
+  const isMatched = await user.comparePassword(password);
 
-    // handle error which will do later 
 
-    // now checking password from register
+  // try catch block or other error handlers
+  // for example if user does not exist 
 
-    
-    const isMatched = await user.comparePassword(password);
-    
-    console.log("hello ")
+  if(!isMatched){
+      // return next(new Error("Incorrect Password"))
+      //! by default error object have one parameter only and that is message
+      //! so that we will create a new error handler class now
+      return next( new ErrorHandler("incorrect Password", 400))
+  }
+   res.status(201).json({
+      success : true,
+      message : `welcome back :  ${user.name}`
+  })   
+});
 
-    console.log("isMatched", isMatched);
+//!SIGNUP
+export const signup = asyncError(async (req, res, next) => {
+  // console.log(res.body);
+const { name, email, password, address, city, country, pinCode } = req.body;
+// add clouldnary for image here
+await User.create({
+  name,
+  email,
+  password,
+  address,
+  city,
+  country,
+  pinCode,
+});
 
-    // try catch block or other error handlers
-    // for example if user does not exist 
-
-    if(!isMatched){
-        return res.status(400).json({
-            success : false,
-            message : "Incorrect Password"
-        })
-    }
-     res.status(201).json({
-        success : true,
-        message : `welcome back :  ${user.name}`
-    })
-};
-
-export const signup = async (req, res, next) => {
-    // console.log(res.body);
-  const { name, email, password, address, city, country, pinCode } = req.body;
-  // add clouldnary for image here
-  await User.create({
-    name,
-    email,
-    password,
-    address,
-    city,
-    country,
-    pinCode,
-  });
-
-  res.status(201).json({
-    success: true,
-    message: "registered successfully!",
-  });
-};
+res.status(201).json({
+  success: true,
+  message: "registered successfully!",
+});
+});
