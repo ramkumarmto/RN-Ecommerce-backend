@@ -3,7 +3,7 @@
 import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcrypt";
-// import jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 
 
@@ -65,6 +65,7 @@ const schema = new mongoose.Schema({
 //! this is about register
 // hashing password
 schema.pre("save", async function (next) {
+  if(!this.isModified("password")) return  next()
   // we can't access value of this.password so we are using normal function in the above line
   // console.log(this.password);
   // here it is 10, more the number would be more complex password would be but it would be more time consuming
@@ -84,10 +85,16 @@ schema.methods.comparePassword = async function (enteredPassword) {
   // it will return boolean either true | false 
 };
 
-// schema.methods.generateToken = function () {
-//   return jwt.sign({ _id: this._id }, process.env.JWT_SECRET, {
-//     expiresIn: "15d",
-//   });
-// };
+//! authentication
+// it will not return promise so no need to write async function
+
+const token = schema.methods.generateToken = function () {
+  return jwt.sign({ _id: this._id }, process.env.JWT_SECRET, {
+    expiresIn: "15d",
+  });
+};
+
+console.log("token in user model", token)
+
 
 export const User = mongoose.model("User", schema);
