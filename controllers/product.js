@@ -4,8 +4,22 @@ import ErrorHandler from "../utils/error.js";
 import { getDataUri } from "../utils/features.js";
 import cloudinary from "cloudinary";
 import { Category } from "../models/category.js";
+
+//! GET ALL PRODUCTS
 export const getAllProducts = asyncError(async (req, res, next) => {
-  const products = await Product.find({});
+  //! SEARCH AND FILTER
+  const { keyword, category } = req.query;
+  const products = await Product.find({
+    name : {
+      $regex : keyword ? keyword : "",
+      $options : 'i', // case insensitive
+    },
+    category : category ? category : undefined,
+  });
+
+  // const products = await Product.find({
+   
+  // });
 
   res.status(200).json({
     success: true,
@@ -14,7 +28,7 @@ export const getAllProducts = asyncError(async (req, res, next) => {
 });
 
 export const getProductDetails = asyncError(async (req, res, next) => {
-  const product = await Product.findById(req.params.id);
+  const product = await Product.findById(req.params.id).populate("category");
 
   if (!product) return next(new ErrorHandler("Product not Found!", 400));
 
@@ -147,7 +161,7 @@ export const deleteProduct = asyncError(async (req, res, next) => {
     await cloudinary.v2.uploader.destroy(product.images[i].public_id);
   }
 
-  await Product.deleteOne(product)
+  await Product.deleteOne(product);
 
   res.status(200).json({
     success: true,
@@ -155,63 +169,59 @@ export const deleteProduct = asyncError(async (req, res, next) => {
   });
 });
 
-
 //! CATEGORIES
 
-export const addCategory = asyncError( async(req, res, next) =>{
-
+export const addCategory = asyncError(async (req, res, next) => {
   const { category } = req.body;
   await Category.create({
-    category
+    category,
   });
 
   res.status(201).json({
-    success : true,
-    message : "Category Created Successfully!"
-  })
+    success: true,
+    message: "Category Created Successfully!",
+  });
+});
+export const getAllCategories = asyncError(async (req, res, next) => {
+  const categories = await Category.find({});
 
-})
-export const getAllCategories = asyncError( async(req, res, next) =>{
+  res.status(200).json({
+    success: true,
+    categories,
+  });
+});
+export const deleteCategory = asyncError(async (req, res, next) => {
+  const category = await Category.findById(req.params.id);
+  if (!category) return next(new ErrorHandler("Category not found!", 404));
 
- const categories =  await Category.find({});
+  //!
 
- res.status(200).json({
-  success : true,
-  categories
- })
+  const products = await Product.find({ category: category._id });
 
-})
-export const deleteCategory = asyncError( async(req, res, next) =>{
+  for (let i = 0; i < products.length; i++) {
+    const product = products[i];
+    product.category = undefined;
+    await product.save();
+  }
 
- const category = await Category.findById(req.params.id);
- if(!category) return next( new ErrorHandler("Category not found!", 404))
+  console.log(`${category} deleted successfully!`);
 
- //!
+  await Category.deleteOne(category);
 
- const products = await Product.find({ category : category._id})
-
- for(let i = 0; i < products.length; i++){
-  const product = products[i];
-  product.category = undefined;
-  await product.save();
- }
-
- console.log(`${category} deleted successfully!`)
-
- await Category.deleteOne(category)
-
- res.status(200).json({
-  success : true,
-  message : " Category deleted Successfully"
- })
-
-})
-
+  res.status(200).json({
+    success: true,
+    message: " Category deleted Successfully",
+  });
+});
 
 //! Get Admin Products
 
 export const getAdminProducts = asyncError(async (req, res, next) => {
-  const products = await Product.find({});
+  const products = await Product.find({}).populate("category");
+
+  //populate("category") what does this mean ? => right now only id of category is populating in the product but with that line the object containing that id will populate
+
+  // like findById
 
   res.status(200).json({
     success: true,

@@ -26,10 +26,12 @@ app.use(cookieParser()) // this middleware parse thr cookie other wise you will 
 
 //routing
 import userRouter from './routes/user.js';
-import productRouter from './routes/product.js'
+import productRouter from './routes/product.js';
+import orderRouter from './routes/order.js'
 
 app.use("/api/v1/user", userRouter);
-app.use("/api/v1/product",productRouter )
+app.use("/api/v1/product",productRouter );
+app.use("/api/v1/order",orderRouter );
 
 
 // using error middleware
