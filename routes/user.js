@@ -1,7 +1,7 @@
 
 
 import express from 'express';
-import { login, signup, getMyProfile, logout, updateProfile, changePassword } from '../controllers/user.js';
+import { login, signup, getMyProfile, logout, updateProfile, changePassword, forgetPassword, resetPassword } from '../controllers/user.js';
 import { isAuthenticated  } from '../middlewares/auth.js';
 import { singleUpload } from '../middlewares/multer.js';
 
@@ -21,5 +21,10 @@ router.put('/changepassword', isAuthenticated, changePassword)
 
 // update picture
 router.put('/updatepic', isAuthenticated,)
+
+
+// forget password and reset password
+
+router.route('/forgetpassword').post(forgetPassword).put(resetPassword)
 
 export default router;  

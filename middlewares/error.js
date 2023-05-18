@@ -10,6 +10,10 @@ if(err.code === 11000){
     err.statusCode = 400;
 
 }
+// error when id is invalid and asking for product details 
+if(err.name === "CastError"){
+  err.message =   `Invalid ${err.path}`
+}
 
   res.status(err.statusCode).json({
     success: false,

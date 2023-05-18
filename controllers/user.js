@@ -1,7 +1,7 @@
 import { asyncError } from "../middlewares/error.js";
 import { User } from "../models/user.js";
 import ErrorHandler from "../utils/error.js";
-import { cookieOptions, sendToken, getDataUri } from "../utils/features.js";
+import { cookieOptions, sendToken, getDataUri, sendEmail } from "../utils/features.js";
 import cloudinary from 'cloudinary'
 
 //!LOGIN
@@ -181,6 +181,78 @@ export const updatePic = asyncError( async(req, res ,next)=>{
   res.status(200).json({
     success : true,
     user
+  })
+
+})
+
+
+export const forgetPassword = asyncError( async(req, res ,next)=>{
+  const { email } = req.body;
+  const user = await User.findOne({email})
+  if(!user) return next(new ErrorHandler("Incorrect Email", 404))
+
+  const randomNumber = Math.random() * (999999 - 100000) + 100000;
+
+  const otp = Math.floor(randomNumber);
+  const otp_expire = 15 * 60 * 1000;
+
+  user.otp = otp;
+  user.otp_expire = new Date(Date.now() + otp_expire);
+  const message = `Your OTP for Resetting Password is ${otp}. \n Please ignore if you have not requested for this. and kindly don't share OTP with someone else `
+
+
+  await user.save();
+
+// this would be in try catch block because there may be error on sending otp
+
+try{
+ await sendEmail("OTP for Resetting Password", user.email, message)
+  console.log( message)
+
+}catch(error){
+user.otp = null;
+user.otp_expire = null;
+await user.save();
+return next(error)
+// return next(new ErrorHandler("something went wrong", 400))
+}
+ 
+
+  // send email here 
+
+
+  res.status(200).json({
+    success : true,
+    message : `Email sent to ${user.email}`
+  })
+
+})
+export const resetPassword = asyncError( async(req, res ,next)=>{
+
+  const { otp, password } = req.body;
+
+  // ! we will find user by otp and otp_expire
+  
+  const user = await User.findOne({
+    otp,
+    otp_expire : {
+      $gt : Date.now(),
+    }
+  })
+
+  if(!user) return next( new ErrorHandler( "Invalid OTP or has been expired", 400))
+
+  if(!password) return next(new ErrorHandler("please enter new password", 400))
+
+  user.password = password;
+  user.otp = undefined;
+  user.otp_expire = undefined;
+
+  await user.save();
+
+  res.status(200).json({
+    success : true,
+    message : " Password Changed successfully !"
   })
 
 })
