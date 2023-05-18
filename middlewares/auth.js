@@ -25,3 +25,10 @@ export const isAuthenticated = asyncError(async (req, res, next)=>{
 
     next();
 });
+
+
+export const isAdmin = asyncError( async (req, res, next)=>{
+    if(req.user.role !== "admin") return next( new ErrorHandler("You are not Admin, only admin Allowed!"))
+    next();
+})
+// after authentication we have to use isAdmin route because we are usring req.user here in isAdmin and we can't get req.user without authentication middleware

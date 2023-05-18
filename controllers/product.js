@@ -206,3 +206,15 @@ export const deleteCategory = asyncError( async(req, res, next) =>{
  })
 
 })
+
+
+//! Get Admin Products
+
+export const getAdminProducts = asyncError(async (req, res, next) => {
+  const products = await Product.find({});
+
+  res.status(200).json({
+    success: true,
+    products,
+  });
+});
