@@ -2,6 +2,7 @@ import { asyncError } from "../middlewares/error.js";
 import { Order } from "../models/order.js";
 import { Product } from "../models/product.js";
 import ErrorHandler from "../utils/error.js";
+import { stripe } from "../server.js";
 
 //! CREATE ORDER
 
@@ -48,7 +49,7 @@ export const createOrder = asyncError(async (req, res, next) => {
 export const getMyOrders = asyncError(async (req, res, next) => {
   // my order using user id
   const orders = await Order.find({ user: req.user._id });
-  console.log("order", orders);
+  // console.log("order", orders);
 
   res.status(200).json({
     success: true,
@@ -97,3 +98,22 @@ export const proccessOrder = asyncError(async (req, res, next) => {
     message: "Order Processed successfully!",
   });
 });
+
+
+//! PROCESS PAYMENT
+
+export const processPayment = asyncError( async(req, res, next)=>{
+
+  const { totalAmount } = req.body;
+  const { client_secret } = await stripe.paymentIntents.create({
+    // smallest unit of currency for india it is paisa, for usa it would be cents
+    amount : Number(totalAmount * 100),
+    currency : 'inr'
+  })
+
+  res.status(200).json({
+    success : true,
+    client_secret
+  })
+
+})

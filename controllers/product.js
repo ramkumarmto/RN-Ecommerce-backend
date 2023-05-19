@@ -223,8 +223,12 @@ export const getAdminProducts = asyncError(async (req, res, next) => {
 
   // like findById
 
+  const outOfStock = products.filter((i) => i.stock === 0)
+
   res.status(200).json({
     success: true,
     products,
+    outOfStock : outOfStock.length,
+    inStock : products.length - outOfStock.length
   });
 });
